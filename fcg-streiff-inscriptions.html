@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groupe STREIFF × FCG — Places matchs à domicile 2026/2027</title>
+
+<!--
+  ============================================================================
+  CONFIGURATION REQUISE AVANT MISE EN LIGNE — voir section "FIREBASE_CONFIG"
+  plus bas dans le <script>, et le guide de déploiement fourni à part.
+  Résumé :
+    1. Créer un projet gratuit sur https://console.firebase.google.com
+    2. Activer "Realtime Database" (mode test au départ)
+    3. Activer "Authentication" > méthode "E-mail/Mot de passe"
+    4. Créer UN utilisateur admin : e-mail admin@fcg-streiff.local /
+       mot de passe STREIFF2027 (ou un mot de passe de votre choix, à
+       reporter aussi dans ADMIN_EMAIL/ADMIN_PASSWORD_HINT ci-dessous)
+    5. Coller les clés de config Firebase dans FIREBASE_CONFIG ci-dessous
+    6. Coller les règles de sécurité fournies (fichier firebase-rules.json)
+       dans Realtime Database > Règles
+    7. Déployer ce fichier unique sur GitHub Pages (ou tout hébergement
+       statique) et partager l'URL
+  ============================================================================
+-->
+
+<style>
+  :root {
+    --navy: #0C2340;
+    --navy-light: #16335c;
+    --red: #C8102E;
+    --red-dark: #a20d25;
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --text: #1c2430;
+    --text-muted: #667085;
+    --border: #e3e6ea;
+    --success: #1a7f4e;
+    --shadow: 0 1px 3px rgba(12,35,64,0.08), 0 1px 2px rgba(12,35,64,0.06);
+    --shadow-lg: 0 10px 30px rgba(12,35,64,0.18);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header.top {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    color: #fff;
+    padding: 40px 20px 48px;
+    text-align: center;
+  }
+
+  header.top .crest {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--red);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  header.top h1 {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  header.top p {
+    margin: 0;
+    color: #c9d2e0;
+    font-size: 15px;
+  }
+
+  main {
+    max-width: 880px;
+    margin: -28px auto 60px;
+    padding: 0 16px;
+  }
+
+  .info-banner {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .matches {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: opacity 0.15s ease;
+  }
+
+  .match-card.disabled {
+    opacity: 0.45;
+  }
+
+  .match-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 200px;
+  }
+
+  .match-journee {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .match-opponent {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .match-date {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .match-side {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .seats-badge {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #eaf7ef;
+    color: var(--success);
+    white-space: nowrap;
+  }
+
+  .seats-badge.full {
+    background: #f3f0f5;
+    color: var(--text-muted);
+  }
+
+  .seats-badge.past {
+    background: #f3f0f5;
+    color: var(--text-muted);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--red);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--red-dark); }
+
+  .btn-primary:disabled {
+    background: #d9d9df;
+    color: #8b8f99;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: #fff;
+    color: var(--navy);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: #f2f3f5; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    text-decoration: underline;
+    padding: 6px 8px;
+  }
+
+  .btn-danger {
+    background: #fdecec;
+    color: var(--red-dark);
+    border: 1px solid #f4c6cb;
+  }
+  .btn-danger:hover { background: #fbd9db; }
+
+  footer.bottom {
+    max-width: 880px;
+    margin: 30px auto 40px;
+    padding: 0 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* ---------- Modal ---------- */
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12,20,35,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 420px;
+    padding: 26px 24px 24px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal h2 {
+    margin: 0 0 4px;
+    font-size: 19px;
+    color: var(--navy);
+  }
+
+  .modal .modal-sub {
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+  }
+
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(12,35,64,0.1);
+  }
+
+  .field-error {
+    color: var(--red-dark);
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+  }
+
+  .form-error {
+    background: #fdecec;
+    color: var(--red-dark);
+    border: 1px solid #f4c6cb;
+    border-radius: 9px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .modal-actions .btn { flex: 1; }
+
+  .success-box {
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+  .success-box .check {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #eaf7ef;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  .success-box h2 { margin-bottom: 8px; }
+  .success-box p { color: var(--text-muted); font-size: 14px; margin: 0 0 20px; }
+
+  /* ---------- Admin ---------- */
+
+  .admin-link {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .admin-wrap {
+    max-width: 1000px;
+    margin: 0 auto 60px;
+    padding: 0 16px;
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0 18px;
+  }
+
+  .admin-header h2 {
+    color: var(--navy);
+    margin: 0;
+  }
+
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+    font-size: 14px;
+  }
+
+  .summary-table th, .summary-table td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .summary-table th {
+    background: #f4f5f7;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .summary-table tr:last-child td { border-bottom: none; }
+
+  .match-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .match-block-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    cursor: pointer;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .match-block-head:hover { background: #fafafa; }
+
+  .match-block-title {
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .match-block-body {
+    display: none;
+    padding: 0 18px 16px;
+  }
+  .match-block-body.open { display: block; }
+
+  .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .reg-table th, .reg-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .reg-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 10px 0;
+  }
+
+  .admin-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .login-box {
+    max-width: 360px;
+    margin: 60px auto;
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 28px 26px;
+    text-align: center;
+  }
+  .login-box h2 { color: var(--navy); margin-top: 0; }
+  .login-box .field { text-align: left; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 560px) {
+    .match-card { flex-direction: column; align-items: flex-start; }
+    .match-side { width: 100%; justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== VUE UTILISATEUR ==================== -->
+<div id="publicView">
+  <header class="top">
+    <div class="crest">Groupe STREIFF × FCG</div>
+    <h1>Places matchs à domicile — Saison 2026/2027</h1>
+    <p>Stade Lesdiguières, Grenoble — 4 places offertes par match</p>
+  </header>
+
+  <main>
+    <div class="info-banner">
+      Choisissez un match, indiquez vos coordonnées et le nombre de places souhaitées (jusqu'à 4 par personne, dans la limite du stock disponible). Une seule inscription par adresse e-mail et par match.
+    </div>
+    <div class="matches" id="matchesList">
+      <!-- injecté par JS -->
+    </div>
+  </main>
+
+  <footer class="bottom">
+    Groupe STREIFF — partenaire officiel du FC Grenoble Rugby
+    <br>
+    <button class="admin-link" id="openAdminBtn">Admin</button>
+  </footer>
+</div>
+
+<!-- Modal inscription -->
+<div class="overlay" id="regOverlay">
+  <div class="modal">
+    <div id="regFormWrap">
+      <h2 id="regModalTitle">Je m'inscris</h2>
+      <p class="modal-sub" id="regModalSub"></p>
+
+      <div class="form-error" id="regFormError"></div>
+
+      <form id="regForm">
+        <div class="field">
+          <label for="fPrenom">Prénom *</label>
+          <input type="text" id="fPrenom" required maxlength="60">
+        </div>
+        <div class="field">
+          <label for="fNom">Nom *</label>
+          <input type="text" id="fNom" required maxlength="60">
+        </div>
+        <div class="field">
+          <label for="fEmail">Adresse e-mail *</label>
+          <input type="email" id="fEmail" required maxlength="120">
+        </div>
+        <div class="field">
+          <label for="fSeats">Nombre de places souhaitées *</label>
+          <select id="fSeats" required></select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="regCancelBtn">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="regSubmitBtn">Confirmer mon inscription</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="regSuccessWrap" class="success-box hidden">
+      <div class="check">✓</div>
+      <h2>Inscription confirmée</h2>
+      <p id="regSuccessText"></p>
+      <button class="btn btn-primary" id="regCloseBtn" style="width:100%">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== VUE ADMIN ==================== -->
+<div id="adminView" class="hidden">
+
+  <!-- Login -->
+  <div id="adminLoginWrap">
+    <header class="top">
+      <div class="crest">Groupe STREIFF × FCG</div>
+      <h1>Espace administrateur</h1>
+    </header>
+    <div class="login-box">
+      <h2>Connexion admin</h2>
+      <div class="form-error" id="adminLoginError"></div>
+      <form id="adminLoginForm">
+        <div class="field">
+          <label for="adminPassword">Mot de passe</label>
+          <input type="password" id="adminPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Se connecter</button>
+      </form>
+      <p style="margin-top:16px;">
+        <button class="admin-link" id="backToPublicBtn">← Retour à la page d'inscription</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="adminDashboardWrap" class="hidden">
+    <header class="top">
+      <div class="crest">Groupe STREIFF × FCG</div>
+      <h1>Tableau de bord — Inscriptions</h1>
+    </header>
+    <div class="admin-wrap">
+      <div class="admin-header">
+        <h2>Vue d'ensemble</h2>
+        <div class="admin-actions-row">
+          <button class="btn btn-secondary" id="exportAllBtn">Exporter tout (CSV)</button>
+          <button class="btn btn-secondary" id="adminLogoutBtn">Se déconnecter</button>
+        </div>
+      </div>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>Date</th>
+            <th>Adversaire</th>
+            <th>Places prises</th>
+            <th>Places restantes</th>
+          </tr>
+        </thead>
+        <tbody id="summaryTableBody"></tbody>
+      </table>
+
+      <h2 style="color:var(--navy);">Détail par match</h2>
+      <div id="matchBlocks"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
+<script>
+(function () {
+  "use strict";
+
+  // ==========================================================================
+  // 1. CONFIGURATION — À REMPLIR après création du projet Firebase
+  // ==========================================================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBanFt-wunYL5puW0_I2hyOM4zwxZ1Ap44",
+    authDomain: "placesprod2-fcg-groupestreiff.firebaseapp.com",
+    databaseURL: "https://placesprod2-fcg-groupestreiff-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "placesprod2-fcg-groupestreiff",
+    storageBucket: "placesprod2-fcg-groupestreiff.firebasestorage.app",
+    messagingSenderId: "721912675668",
+    appId: "1:721912675668:web:6c947624ecaba7c23e9cc1"
+  };
+
+  // Doit correspondre à l'utilisateur Firebase Authentication créé pour l'admin.
+  const ADMIN_EMAIL = "admin@fcg-streiff.local";
+
+  const TOTAL_SEATS = 4;
+
+  const MATCHES = [
+    { id: "j1",  label: "J1",  date: "2026-08-28", dateLabel: "Vendredi 28 août 2026",     opponent: "Aurillac" },
+    { id: "j3",  label: "J3",  date: "2026-09-12", dateLabel: "Vendredi 12 septembre 2026", opponent: "Agen" },
+    { id: "j5",  label: "J5",  date: "2026-09-25", dateLabel: "Vendredi 25 septembre 2026", opponent: "Valence-Romans DR" },
+    { id: "j6",  label: "J6",  date: "2026-10-09", dateLabel: "Vendredi 9 octobre 2026",    opponent: "Colomiers" },
+    { id: "j8",  label: "J8",  date: "2026-10-23", dateLabel: "Vendredi 23 octobre 2026",   opponent: "Biarritz" },
+    { id: "j11", label: "J11", date: "2026-11-20", dateLabel: "Vendredi 20 novembre 2026",  opponent: "Provence Rugby" },
+    { id: "j14", label: "J14", date: "2026-12-11", dateLabel: "Vendredi 11 décembre 2026",  opponent: "Nevers" },
+    { id: "j16", label: "J16", date: "2027-01-08", dateLabel: "Vendredi 8 janvier 2027",    opponent: "Béziers" },
+    { id: "j19", label: "J19", date: "2027-01-29", dateLabel: "Vendredi 29 janvier 2027",   opponent: "Nice" },
+    { id: "j20", label: "J20", date: "2027-02-12", dateLabel: "Vendredi 12 février 2027",   opponent: "Brive" },
+    { id: "j22", label: "J22", date: "2027-02-26", dateLabel: "Vendredi 26 février 2027",   opponent: "Montauban" },
+    { id: "j24", label: "J24", date: "2027-03-26", dateLabel: "Vendredi 26 mars 2027",      opponent: "Narbonne" },
+    { id: "j26", label: "J26", date: "2027-04-09", dateLabel: "Vendredi 9 avril 2027",      opponent: "Dax" },
+    { id: "j28", label: "J28", date: "2027-04-23", dateLabel: "Vendredi 23 avril 2027",     opponent: "Oyonnax" },
+    { id: "j30", label: "J30", date: "2027-05-14", dateLabel: "Vendredi 14 mai 2027",       opponent: "SA XV" }
+  ];
+
+  // ==========================================================================
+  // 2. INITIALISATION FIREBASE
+  // ==========================================================================
+  firebase.initializeApp(FIREBASE_CONFIG);
+  const db = firebase.database();
+  const auth = firebase.auth();
+
+  let takenByMatch = {}; // { matchId: number }
+  let currentMatchId = null;
+  let currentAdminOpenMatchId = null;
+
+  // ==========================================================================
+  // 3. HELPERS
+  // ==========================================================================
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function isPast(matchDateISO) {
+    return matchDateISO < todayISO();
+  }
+
+  function sanitizeEmailKey(email) {
+    return email.trim().toLowerCase().replace(/[.#$/\[\]\s]/g, "_");
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function formatTimestamp(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    return d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  // ==========================================================================
+  // 4. VUE UTILISATEUR — rendu de la liste des matchs
+  // ==========================================================================
+  const matchesListEl = document.getElementById("matchesList");
+
+  function remainingSeats(matchId) {
+    const taken = takenByMatch[matchId] || 0;
+    return Math.max(0, TOTAL_SEATS - taken);
+  }
+
+  function renderMatches() {
+    matchesListEl.innerHTML = "";
+    MATCHES.forEach(function (m) {
+      const remaining = remainingSeats(m.id);
+      const past = isPast(m.date);
+      const full = remaining <= 0;
+      const disabled = past || full;
+
+      const card = document.createElement("div");
+      card.className = "match-card" + (disabled ? " disabled" : "");
+
+      let badgeClass = "seats-badge";
+      let badgeText = remaining + (remaining > 1 ? " places restantes" : " place restante");
+      if (past) {
+        badgeClass += " past";
+        badgeText = "Match passé";
+      } else if (full) {
+        badgeClass += " full";
+        badgeText = "Complet";
+      }
+
+      card.innerHTML =
+        '<div class="match-main">' +
+          '<span class="match-journee">' + escapeHtml(m.label) + '</span>' +
+          '<span class="match-opponent">FCG – ' + escapeHtml(m.opponent) + '</span>' +
+          '<span class="match-date">' + escapeHtml(m.dateLabel) + '</span>' +
+        '</div>' +
+        '<div class="match-side">' +
+          '<span class="' + badgeClass + '">' + badgeText + '</span>' +
+          '<button class="btn btn-primary" data-match="' + m.id + '" ' + (disabled ? "disabled" : "") + '>Je m\'inscris</button>' +
+        '</div>';
+
+      matchesListEl.appendChild(card);
+    });
+  }
+
+  matchesListEl.addEventListener("click", function (e) {
+    const btn = e.target.closest("button[data-match]");
+    if (!btn || btn.disabled) return;
+    openRegModal(btn.getAttribute("data-match"));
+  });
+
+  // Live counters
+  db.ref("matches").on("value", function (snap) {
+    const val = snap.val() || {};
+    takenByMatch = {};
+    Object.keys(val).forEach(function (id) {
+      takenByMatch[id] = (val[id] && typeof val[id].taken === "number") ? val[id].taken : 0;
+    });
+    renderMatches();
+    if (currentAdminOpenMatchId !== null) refreshAdminMatchBlock(currentAdminOpenMatchId);
+    renderAdminSummary();
+  }, function (err) {
+    console.error("Erreur lecture compteurs:", err);
+  });
+
+  // ==========================================================================
+  // 5. MODAL D'INSCRIPTION
+  // ==========================================================================
+  const regOverlay = document.getElementById("regOverlay");
+  const regFormWrap = document.getElementById("regFormWrap");
+  const regSuccessWrap = document.getElementById("regSuccessWrap");
+  const regModalTitle = document.getElementById("regModalTitle");
+  const regModalSub = document.getElementById("regModalSub");
+  const regForm = document.getElementById("regForm");
+  const regFormError = document.getElementById("regFormError");
+  const fPrenom = document.getElementById("fPrenom");
+  const fNom = document.getElementById("fNom");
+  const fEmail = document.getElementById("fEmail");
+  const fSeats = document.getElementById("fSeats");
+  const regSubmitBtn = document.getElementById("regSubmitBtn");
+
+  function openRegModal(matchId) {
+    currentMatchId = matchId;
+    const match = MATCHES.find(function (m) { return m.id === matchId; });
+    if (!match) return;
+
+    regFormWrap.classList.remove("hidden");
+    regSuccessWrap.classList.add("hidden");
+    regFormError.style.display = "none";
+    regForm.reset();
+
+    regModalTitle.textContent = "Je m'inscris — " + match.opponent;
+    regModalSub.textContent = match.dateLabel + " · Stade Lesdiguières";
+
+    const remaining = remainingSeats(matchId);
+    fSeats.innerHTML = "";
+    for (let i = 1; i <= remaining; i++) {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = i + (i > 1 ? " places" : " place");
+      fSeats.appendChild(opt);
+    }
+
+    regOverlay.classList.add("open");
+  }
+
+  function closeRegModal() {
+    regOverlay.classList.remove("open");
+    currentMatchId = null;
+  }
+
+  document.getElementById("regCancelBtn").addEventListener("click", closeRegModal);
+  document.getElementById("regCloseBtn").addEventListener("click", closeRegModal);
+  regOverlay.addEventListener("click", function (e) {
+    if (e.target === regOverlay) closeRegModal();
+  });
+
+  function showFormError(msg) {
+    regFormError.textContent = msg;
+    regFormError.style.display = "block";
+  }
+
+  regForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    regFormError.style.display = "none";
+
+    const matchId = currentMatchId;
+    const match = MATCHES.find(function (m) { return m.id === matchId; });
+    if (!match) return;
+
+    if (isPast(match.date)) {
+      showFormError("Ce match est déjà passé.");
+      return;
+    }
+
+    const prenom = fPrenom.value.trim();
+    const nom = fNom.value.trim();
+    const email = fEmail.value.trim();
+    const seats = parseInt(fSeats.value, 10);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!prenom || !nom) {
+      showFormError("Merci de renseigner votre prénom et votre nom.");
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      showFormError("Adresse e-mail invalide.");
+      return;
+    }
+    if (!seats || seats < 1) {
+      showFormError("Merci de choisir un nombre de places.");
+      return;
+    }
+
+    regSubmitBtn.disabled = true;
+    regSubmitBtn.textContent = "Inscription en cours…";
+
+    submitRegistration(matchId, prenom, nom, email, seats)
+      .then(function () {
+        regFormWrap.classList.add("hidden");
+        regSuccessWrap.classList.remove("hidden");
+        document.getElementById("regSuccessText").textContent =
+          "Vous êtes inscrit(e) pour " + match.opponent + " (" + match.dateLabel + ") — " +
+          seats + (seats > 1 ? " places" : " place") + ". Un e-mail de confirmation vous sera envoyé par l'entreprise.";
+      })
+      .catch(function (err) {
+        showFormError(err.message || "Une erreur est survenue, merci de réessayer.");
+      })
+      .finally(function () {
+        regSubmitBtn.disabled = false;
+        regSubmitBtn.textContent = "Confirmer mon inscription";
+      });
+  });
+
+  // Cœur de la logique métier : réservation atomique + anti-doublon
+  function submitRegistration(matchId, prenom, nom, email, seats) {
+    const emailKey = sanitizeEmailKey(email);
+    const regRef = db.ref("registrations/" + matchId + "/" + emailKey);
+    const takenRef = db.ref("matches/" + matchId + "/taken");
+
+    return regRef.get().then(function (existing) {
+      if (existing.exists()) {
+        throw new Error("Cette adresse e-mail est déjà inscrite à ce match.");
+      }
+
+      return takenRef.transaction(function (current) {
+        const cur = current || 0;
+        if (cur + seats > TOTAL_SEATS) {
+          return; // undefined => abort transaction, plus assez de places
+        }
+        return cur + seats;
+      }).then(function (result) {
+        if (!result.committed) {
+          throw new Error("Il ne reste plus assez de places disponibles pour ce match.");
+        }
+
+        return regRef.set({
+          firstName: prenom,
+          lastName: nom,
+          email: email,
+          seats: seats,
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+        }).catch(function (writeErr) {
+          // Rare course : l'e-mail a été pris entre-temps -> on libère les places réservées
+          return takenRef.transaction(function (current) {
+            return Math.max(0, (current || 0) - seats);
+          }).then(function () {
+            throw new Error("Cette adresse e-mail vient d'être inscrite par une autre session. Merci de réessayer.");
+          });
+        });
+      });
+    });
+  }
+
+  // ==========================================================================
+  // 6. ADMIN — connexion
+  // ==========================================================================
+  const publicView = document.getElementById("publicView");
+  const adminView = document.getElementById("adminView");
+  const adminLoginWrap = document.getElementById("adminLoginWrap");
+  const adminDashboardWrap = document.getElementById("adminDashboardWrap");
+  const adminLoginForm = document.getElementById("adminLoginForm");
+  const adminLoginError = document.getElementById("adminLoginError");
+
+  function showAdminView() {
+    publicView.classList.add("hidden");
+    regOverlay.classList.remove("open");
+    adminView.classList.remove("hidden");
+  }
+
+  function showPublicView() {
+    adminView.classList.add("hidden");
+    publicView.classList.remove("hidden");
+  }
+
+  document.getElementById("openAdminBtn").addEventListener("click", showAdminView);
+  document.getElementById("backToPublicBtn").addEventListener("click", showPublicView);
+
+  if (new URLSearchParams(window.location.search).get("admin") === "true") {
+    showAdminView();
+  }
+
+  auth.onAuthStateChanged(function (user) {
+    if (user && user.email === ADMIN_EMAIL) {
+      adminLoginWrap.classList.add("hidden");
+      adminDashboardWrap.classList.remove("hidden");
+      subscribeAdminData();
+    } else {
+      adminLoginWrap.classList.remove("hidden");
+      adminDashboardWrap.classList.add("hidden");
+    }
+  });
+
+  adminLoginForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    adminLoginError.style.display = "none";
+    const password = document.getElementById("adminPassword").value;
+    auth.signInWithEmailAndPassword(ADMIN_EMAIL, password)
+      .catch(function () {
+        adminLoginError.textContent = "Mot de passe incorrect.";
+        adminLoginError.style.display = "block";
+      });
+  });
+
+  document.getElementById("adminLogoutBtn").addEventListener("click", function () {
+    auth.signOut();
+    showPublicView();
+  });
+
+  // ==========================================================================
+  // 7. ADMIN — tableau de bord
+  // ==========================================================================
+  let registrationsByMatch = {}; // { matchId: { emailKey: {firstName,...} } }
+  let adminSubscribed = false;
+
+  function subscribeAdminData() {
+    if (adminSubscribed) return;
+    adminSubscribed = true;
+    db.ref("registrations").on("value", function (snap) {
+      registrationsByMatch = snap.val() || {};
+      renderAdminSummary();
+      if (currentAdminOpenMatchId !== null) refreshAdminMatchBlock(currentAdminOpenMatchId);
+    });
+  }
+
+  const summaryTableBody = document.getElementById("summaryTableBody");
+  const matchBlocksEl = document.getElementById("matchBlocks");
+
+  function renderAdminSummary() {
+    if (adminDashboardWrap.classList.contains("hidden")) return;
+
+    summaryTableBody.innerHTML = "";
+    MATCHES.forEach(function (m) {
+      const taken = takenByMatch[m.id] || 0;
+      const remaining = Math.max(0, TOTAL_SEATS - taken);
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + escapeHtml(m.label) + "</td>" +
+        "<td>" + escapeHtml(m.dateLabel) + "</td>" +
+        "<td>" + escapeHtml(m.opponent) + "</td>" +
+        "<td>" + taken + " / " + TOTAL_SEATS + "</td>" +
+        "<td>" + remaining + "</td>";
+      summaryTableBody.appendChild(tr);
+    });
+
+    if (!matchBlocksEl.dataset.built) {
+      buildMatchBlocks();
+    }
+  }
+
+  function buildMatchBlocks() {
+    matchBlocksEl.innerHTML = "";
+    MATCHES.forEach(function (m) {
+      const block = document.createElement("div");
+      block.className = "match-block";
+      block.innerHTML =
+        '<div class="match-block-head" data-match="' + m.id + '">' +
+          '<span class="match-block-title">' + escapeHtml(m.label) + " — FCG vs " + escapeHtml(m.opponent) + " (" + escapeHtml(m.dateLabel) + ")</span>" +
+          '<span class="seats-badge" id="badge-' + m.id + '"></span>' +
+        '</div>' +
+        '<div class="match-block-body" id="body-' + m.id + '"></div>';
+      matchBlocksEl.appendChild(block);
+    });
+    matchBlocksEl.dataset.built = "1";
+
+    matchBlocksEl.addEventListener("click", function (e) {
+      const head = e.target.closest(".match-block-head");
+      if (!head) return;
+      const matchId = head.getAttribute("data-match");
+      const body = document.getElementById("body-" + matchId);
+      const isOpen = body.classList.contains("open");
+      document.querySelectorAll(".match-block-body.open").forEach(function (b) { b.classList.remove("open"); });
+      if (!isOpen) {
+        body.classList.add("open");
+        currentAdminOpenMatchId = matchId;
+        refreshAdminMatchBlock(matchId);
+      } else {
+        currentAdminOpenMatchId = null;
+      }
+    });
+
+    MATCHES.forEach(function (m) { refreshAdminMatchBlock(m.id); });
+  }
+
+  function getRegList(matchId) {
+    const raw = registrationsByMatch[matchId] || {};
+    return Object.keys(raw).map(function (key) {
+      return Object.assign({ _key: key }, raw[key]);
+    }).sort(function (a, b) { return (a.timestamp || 0) - (b.timestamp || 0); });
+  }
+
+  function refreshAdminMatchBlock(matchId) {
+    const badge = document.getElementById("badge-" + matchId);
+    const body = document.getElementById("body-" + matchId);
+    if (!badge || !body) return;
+
+    const taken = takenByMatch[matchId] || 0;
+    badge.textContent = taken + " / " + TOTAL_SEATS + " places prises";
+
+    const list = getRegList(matchId);
+
+    let html = '<div class="admin-actions-row">' +
+      '<button class="btn btn-secondary btn-export" data-match="' + matchId + '">Exporter CSV (ce match)</button>' +
+      '</div>';
+
+    if (list.length === 0) {
+      html += '<p class="reg-empty">Aucune inscription pour ce match.</p>';
+    } else {
+      html += '<table class="reg-table"><thead><tr>' +
+        "<th>Prénom</th><th>Nom</th><th>E-mail</th><th>Places</th><th>Inscrit le</th><th></th>" +
+        "</tr></thead><tbody>";
+      list.forEach(function (r) {
+        html += "<tr>" +
+          "<td>" + escapeHtml(r.firstName || "") + "</td>" +
+          "<td>" + escapeHtml(r.lastName || "") + "</td>" +
+          "<td>" + escapeHtml(r.email || "") + "</td>" +
+          "<td>" + (r.seats || 0) + "</td>" +
+          "<td>" + formatTimestamp(r.timestamp) + "</td>" +
+          '<td><button class="btn-ghost btn-delete-reg" data-match="' + matchId + '" data-key="' + r._key + '" data-seats="' + (r.seats || 0) + '">Supprimer</button></td>' +
+          "</tr>";
+      });
+      html += "</tbody></table>";
+    }
+
+    body.innerHTML = html;
+  }
+
+  matchBlocksEl.addEventListener("click", function (e) {
+    const exportBtn = e.target.closest(".btn-export");
+    if (exportBtn) {
+      exportMatchCsv(exportBtn.getAttribute("data-match"));
+      return;
+    }
+    const delBtn = e.target.closest(".btn-delete-reg");
+    if (delBtn) {
+      const matchId = delBtn.getAttribute("data-match");
+      const key = delBtn.getAttribute("data-key");
+      const seats = parseInt(delBtn.getAttribute("data-seats"), 10) || 0;
+      if (confirm("Supprimer cette inscription ? Les places seront libérées.")) {
+        deleteRegistration(matchId, key, seats);
+      }
+    }
+  });
+
+  function deleteRegistration(matchId, key, seats) {
+    db.ref("registrations/" + matchId + "/" + key).remove()
+      .then(function () {
+        return db.ref("matches/" + matchId + "/taken").transaction(function (current) {
+          return Math.max(0, (current || 0) - seats);
+        });
+      })
+      .catch(function (err) {
+        alert("Erreur lors de la suppression : " + err.message);
+      });
+  }
+
+  // ==========================================================================
+  // 8. EXPORT CSV
+  // ==========================================================================
+  function csvEscape(val) {
+    const s = String(val === undefined || val === null ? "" : val);
+    if (/[;"\n]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function downloadCsv(filename, rows) {
+    const csv = rows.map(function (row) { return row.map(csvEscape).join(";"); }).join("\r\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportMatchCsv(matchId) {
+    const match = MATCHES.find(function (m) { return m.id === matchId; });
+    const list = getRegList(matchId);
+    const rows = [["Prénom", "Nom", "Email", "Places", "Date d'inscription"]];
+    list.forEach(function (r) {
+      rows.push([r.firstName, r.lastName, r.email, r.seats, formatTimestamp(r.timestamp)]);
+    });
+    downloadCsv("inscriptions_" + matchId + "_" + (match ? match.opponent.replace(/\s+/g, "-") : "") + ".csv", rows);
+  }
+
+  document.getElementById("exportAllBtn").addEventListener("click", function () {
+    const rows = [["Match", "Date", "Adversaire", "Prénom", "Nom", "Email", "Places", "Date d'inscription"]];
+    MATCHES.forEach(function (m) {
+      getRegList(m.id).forEach(function (r) {
+        rows.push([m.label, m.dateLabel, m.opponent, r.firstName, r.lastName, r.email, r.seats, formatTimestamp(r.timestamp)]);
+      });
+    });
+    downloadCsv("inscriptions_toutes_STREIFF_FCG.csv", rows);
+  });
+
+  // ==========================================================================
+  // 9. Rendu initial
+  // ==========================================================================
+  renderMatches();
+})();
+</script>
+</body>
+</html>
