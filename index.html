@@ -159,6 +159,11 @@
     color: var(--text-muted);
   }
 
+  .tbc-note {
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
   .match-side {
     display: flex;
     align-items: center;
@@ -535,7 +540,7 @@
           <input type="text" id="fNom" required maxlength="60">
         </div>
         <div class="field">
-          <label for="fEmail">Adresse e-mail *</label>
+          <label for="fEmail">Adresse mail professionnelle *</label>
           <input type="email" id="fEmail" required maxlength="120">
         </div>
         <div class="field">
@@ -651,20 +656,20 @@
 
   const MATCHES = [
     { id: "j1",  label: "J1",  date: "2026-08-28", dateLabel: "Vendredi 28 août 2026",     opponent: "Aurillac" },
-    { id: "j3",  label: "J3",  date: "2026-09-12", dateLabel: "Vendredi 12 septembre 2026", opponent: "Agen" },
-    { id: "j5",  label: "J5",  date: "2026-09-25", dateLabel: "Vendredi 25 septembre 2026", opponent: "Valence-Romans DR" },
-    { id: "j6",  label: "J6",  date: "2026-10-09", dateLabel: "Vendredi 9 octobre 2026",    opponent: "Colomiers" },
-    { id: "j8",  label: "J8",  date: "2026-10-23", dateLabel: "Vendredi 23 octobre 2026",   opponent: "Biarritz" },
-    { id: "j11", label: "J11", date: "2026-11-20", dateLabel: "Vendredi 20 novembre 2026",  opponent: "Provence Rugby" },
-    { id: "j14", label: "J14", date: "2026-12-11", dateLabel: "Vendredi 11 décembre 2026",  opponent: "Nevers" },
-    { id: "j16", label: "J16", date: "2027-01-08", dateLabel: "Vendredi 8 janvier 2027",    opponent: "Béziers" },
-    { id: "j19", label: "J19", date: "2027-01-29", dateLabel: "Vendredi 29 janvier 2027",   opponent: "Nice" },
-    { id: "j20", label: "J20", date: "2027-02-12", dateLabel: "Vendredi 12 février 2027",   opponent: "Brive" },
-    { id: "j22", label: "J22", date: "2027-02-26", dateLabel: "Vendredi 26 février 2027",   opponent: "Montauban" },
-    { id: "j24", label: "J24", date: "2027-03-26", dateLabel: "Vendredi 26 mars 2027",      opponent: "Narbonne" },
-    { id: "j26", label: "J26", date: "2027-04-09", dateLabel: "Vendredi 9 avril 2027",      opponent: "Dax" },
-    { id: "j28", label: "J28", date: "2027-04-23", dateLabel: "Vendredi 23 avril 2027",     opponent: "Oyonnax" },
-    { id: "j30", label: "J30", date: "2027-05-14", dateLabel: "Vendredi 14 mai 2027",       opponent: "SA XV" }
+    { id: "j3",  label: "J3",  date: "2026-09-11", dateLabel: "Vendredi 11 septembre 2026", opponent: "Agen", time: "21h00" },
+    { id: "j5",  label: "J5",  date: "2026-09-25", dateLabel: "Vendredi 25 septembre 2026", opponent: "Valence-Romans DR", time: "21h00" },
+    { id: "j6",  label: "J6",  date: "2026-10-09", dateLabel: "Vendredi 9 octobre 2026",    opponent: "Colomiers", tbc: true },
+    { id: "j8",  label: "J8",  date: "2026-10-23", dateLabel: "Vendredi 23 octobre 2026",   opponent: "Biarritz", tbc: true },
+    { id: "j11", label: "J11", date: "2026-11-20", dateLabel: "Vendredi 20 novembre 2026",  opponent: "Provence Rugby", tbc: true },
+    { id: "j14", label: "J14", date: "2026-12-11", dateLabel: "Vendredi 11 décembre 2026",  opponent: "Nevers", tbc: true },
+    { id: "j16", label: "J16", date: "2027-01-08", dateLabel: "Vendredi 8 janvier 2027",    opponent: "Béziers", tbc: true },
+    { id: "j19", label: "J19", date: "2027-01-29", dateLabel: "Vendredi 29 janvier 2027",   opponent: "Nice", tbc: true },
+    { id: "j20", label: "J20", date: "2027-02-12", dateLabel: "Vendredi 12 février 2027",   opponent: "Brive", tbc: true },
+    { id: "j22", label: "J22", date: "2027-02-26", dateLabel: "Vendredi 26 février 2027",   opponent: "Montauban", tbc: true },
+    { id: "j24", label: "J24", date: "2027-03-26", dateLabel: "Vendredi 26 mars 2027",      opponent: "Narbonne", tbc: true },
+    { id: "j26", label: "J26", date: "2027-04-09", dateLabel: "Vendredi 9 avril 2027",      opponent: "Dax", tbc: true },
+    { id: "j28", label: "J28", date: "2027-04-23", dateLabel: "Vendredi 23 avril 2027",     opponent: "Oyonnax", tbc: true },
+    { id: "j30", label: "J30", date: "2027-05-14", dateLabel: "Vendredi 14 mai 2027",       opponent: "SA XV", tbc: true }
   ];
 
   // ==========================================================================
@@ -698,6 +703,10 @@
     return String(str).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  }
+
+  function matchDateText(m) {
+    return m.dateLabel + (m.time ? " à " + m.time : "");
   }
 
   function formatTimestamp(ts) {
@@ -741,7 +750,8 @@
         '<div class="match-main">' +
           '<span class="match-journee">' + escapeHtml(m.label) + '</span>' +
           '<span class="match-opponent">FCG – ' + escapeHtml(m.opponent) + '</span>' +
-          '<span class="match-date">' + escapeHtml(m.dateLabel) + '</span>' +
+          '<span class="match-date">' + escapeHtml(matchDateText(m)) +
+            (m.tbc ? ' <span class="tbc-note">· Date et heure à confirmer</span>' : '') + '</span>' +
         '</div>' +
         '<div class="match-side">' +
           '<span class="' + badgeClass + '">' + badgeText + '</span>' +
@@ -799,7 +809,7 @@
     regForm.reset();
 
     regModalTitle.textContent = "Je m'inscris — " + match.opponent;
-    regModalSub.textContent = match.dateLabel + " · Stade des Alpes";
+    regModalSub.textContent = matchDateText(match) + " · Stade des Alpes" + (match.tbc ? " (à confirmer)" : "");
 
     const remaining = remainingSeats(matchId);
     fSeats.innerHTML = "";
@@ -869,8 +879,8 @@
         regFormWrap.classList.add("hidden");
         regSuccessWrap.classList.remove("hidden");
         document.getElementById("regSuccessText").textContent =
-          "Vous êtes inscrit(e) pour " + match.opponent + " (" + match.dateLabel + ") — " +
-          seats + (seats > 1 ? " places" : " place") + ". Un e-mail de confirmation vous sera envoyé par l'entreprise.";
+          "Vous êtes inscrit(e) pour " + match.opponent + " (" + matchDateText(match) + ") — " +
+          seats + (seats > 1 ? " places" : " place") + ". Les places vous seront envoyées quelques jours avant le match.";
       })
       .catch(function (err) {
         showFormError(err.message || "Une erreur est survenue, merci de réessayer.");
@@ -1005,7 +1015,7 @@
       const tr = document.createElement("tr");
       tr.innerHTML =
         "<td>" + escapeHtml(m.label) + "</td>" +
-        "<td>" + escapeHtml(m.dateLabel) + "</td>" +
+        "<td>" + escapeHtml(matchDateText(m)) + (m.tbc ? " (à confirmer)" : "") + "</td>" +
         "<td>" + escapeHtml(m.opponent) + "</td>" +
         "<td>" + taken + " / " + TOTAL_SEATS + "</td>" +
         "<td>" + remaining + "</td>";
@@ -1024,7 +1034,7 @@
       block.className = "match-block";
       block.innerHTML =
         '<div class="match-block-head" data-match="' + m.id + '">' +
-          '<span class="match-block-title">' + escapeHtml(m.label) + " — FCG vs " + escapeHtml(m.opponent) + " (" + escapeHtml(m.dateLabel) + ")</span>" +
+          '<span class="match-block-title">' + escapeHtml(m.label) + " — FCG vs " + escapeHtml(m.opponent) + " (" + escapeHtml(matchDateText(m)) + (m.tbc ? " — à confirmer" : "") + ")</span>" +
           '<span class="seats-badge" id="badge-' + m.id + '"></span>' +
         '</div>' +
         '<div class="match-block-body" id="body-' + m.id + '"></div>';
@@ -1161,7 +1171,7 @@
     const rows = [["Match", "Date", "Adversaire", "Prénom", "Nom", "Email", "Places", "Date d'inscription"]];
     MATCHES.forEach(function (m) {
       getRegList(m.id).forEach(function (r) {
-        rows.push([m.label, m.dateLabel, m.opponent, r.firstName, r.lastName, r.email, r.seats, formatTimestamp(r.timestamp)]);
+        rows.push([m.label, matchDateText(m) + (m.tbc ? " (à confirmer)" : ""), m.opponent, r.firstName, r.lastName, r.email, r.seats, formatTimestamp(r.timestamp)]);
       });
     });
     downloadCsv("inscriptions_toutes_STREIFF_FCG.csv", rows);
